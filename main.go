@@ -21,5 +21,5 @@ func server(){
 	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 	r.Use(gin.Logger())
 	routers.LoadRouters(r)
-	r.Run(":8888") // listen and serve on 0.0.0.0:8080
+	r.Run(":5000") // listen and serve on 0.0.0.0:5000
 }

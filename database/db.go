@@ -26,3 +26,12 @@ func createIfTableNotExit(){
         DB.CreateTable(&models.File{})
     }
 }
+
+func CreateFolder(name string) []error{
+    newFolder := models.Folder{name}
+    err := DB.Create(&newFolder).GetErrors()
+    if err != nil{
+        return err
+    }
+    return nil
+}
