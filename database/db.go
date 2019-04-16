@@ -27,9 +27,9 @@ func createIfTableNotExit(){
     }
 }
 
-func CreateFolder(name string) []error{
-    newFolder := models.Folder{name}
-    err := DB.Create(&newFolder).GetErrors()
+func CreateFolder(name string) error{
+    newFolder := models.Folder{Name:name}
+    err := DB.Create(&newFolder).Error
     if err != nil{
         return err
     }

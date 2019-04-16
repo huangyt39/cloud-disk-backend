@@ -12,6 +12,7 @@ func LoadRouters(router *gin.Engine) {
 }
 
 func loadRouters(router *gin.Engine) {
+	router.Use(utils.Cors())
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"title": "Main page",
@@ -23,15 +24,14 @@ func loadRouters(router *gin.Engine) {
 		})
 	})
 	router.POST("/login", controller.Login)
-	router.Use(utils.VerifyAuthTokenMiddleWare())
-	router.GET("/auth", controller.Auth)
-	router.GET("/folders", controller.GetFolder)
-	router.POST("/folders", controller.CreateFolder)
-	router.GET("/folders/:folder_name", controller.DownloadFolder)
-	router.POST("/folders/:folder_name", controller.UploadFolder)
-	router.DELETE("/folders/:folder_name", controller.DeleteFolder)
-	router.GET("/folders/:folder_name/:file_name", controller.DownloadFile)
-	router.PATCH("/folders/:folder_name/:file_name", controller.UploadFile)
-	router.DELETE("/folders/:folder_name/:file_name", controller.DeleteFile)
-	router.GET("/share/:path", controller.SharePath)
+	router.GET("/auth", utils.VerifyAuthTokenMiddleWare(), controller.Auth)
+	router.GET("/folders", utils.VerifyAuthTokenMiddleWare(), controller.GetFolder)
+	router.POST("/folders", utils.VerifyAuthTokenMiddleWare(), controller.CreateFolder)
+	router.GET("/folders/:folder_name", utils.VerifyAuthTokenMiddleWare(), controller.DownloadFolder)
+	router.POST("/folders/:folder_name", utils.VerifyAuthTokenMiddleWare(), controller.UploadFolder)
+	router.DELETE("/folders/:folder_name", utils.VerifyAuthTokenMiddleWare(), controller.DeleteFolder)
+	router.GET("/folders/:folder_name/:file_name", utils.VerifyAuthTokenMiddleWare(), controller.DownloadFile)
+	router.PATCH("/folders/:folder_name/:file_name", utils.VerifyAuthTokenMiddleWare(), controller.UploadFile)
+	router.DELETE("/folders/:folder_name/:file_name", utils.VerifyAuthTokenMiddleWare(), controller.DeleteFile)
+	router.GET("/share/:path", utils.VerifyAuthTokenMiddleWare(), controller.SharePath)
 }

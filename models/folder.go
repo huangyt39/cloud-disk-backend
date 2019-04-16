@@ -1,5 +1,6 @@
 package models
 
 type Folder struct{
-    Name string `gorm:"type:varchar(64);primary_key:true"`
+    ID   int `gorm:"AUTO_INCREMENT;primary_key:true"`
+    Name string `gorm:"type:varchar(64)"`
 }
