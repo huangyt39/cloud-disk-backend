@@ -2,7 +2,7 @@ package models
 
 type File struct{
     ID                      int`gorm:"AUTO_INCREMENT;primary_key:true"`
-    Folder                  Folder
+    Folder                  Folder `gorm:"ForeignKey:FolderId"`
     Filename                string
     PublicShareUrl          string
     PrivateShareUrl         string

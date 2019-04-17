@@ -10,6 +10,12 @@ import (
 
 func main() {
 	database.InitMysql()
+	//var files []models.File
+	//result := database.DB.Where("id=?", 1).Preload("folder").Find(&files)
+	//if result.Error != nil{
+	//	r := result.Value
+	//	fmt.Println(r)
+	//}
 	server()
 	defer database.DB.Close()
 }

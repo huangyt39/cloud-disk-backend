@@ -22,8 +22,14 @@ func createIfTableNotExit(){
     if !DB.HasTable(&models.Folder{}){
         DB.CreateTable(&models.Folder{})
     }
+    if err := DB.Error; err != nil{
+        logrus.Errorf("error on create table folders, %s", err)
+    }
     if !DB.HasTable(&models.File{}){
         DB.CreateTable(&models.File{})
+    }
+    if err := DB.Error; err != nil{
+        logrus.Errorf("error on create table files, %s", err)
     }
 }
 
