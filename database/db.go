@@ -2,6 +2,7 @@ package database
 
 import (
     "github.com/huangyt39/cloud-disk-backend/models"
+    "github.com/huangyt39/cloud-disk-backend/utils"
     "github.com/jinzhu/gorm"
     _ "github.com/jinzhu/gorm/dialects/mysql"
     "github.com/sirupsen/logrus"
@@ -40,4 +41,31 @@ func CreateFolder(name string) error{
         return err
     }
     return nil
+}
+
+func CreateFile(folder_id int, filename string) error{
+    newFile := models.File{
+        FolderId:               folder_id,
+        Filename:               filename,
+        PublicShareUrl:         utils.GenerateUrl(1024),
+        PrivateShareUrl:        utils.GenerateUrl(2048),
+        PrivateSharePassword:   utils.GeneratePassword(),
+        OpenPublicShare:        false,
+        OpenPrivateShare:       false,
+    }
+    err := DB.Create(&newFile).Error
+    if err != nil{
+        return err
+    }
+    return nil
+}
+
+func GetFolderIDbyName(folder_name string) (int , error){
+    var folder models.Folder
+    db := DB.Where("name = ?", folder_name).Find(&folder)
+    if err := db.Error; err != nil{
+        return 0, err
+    }else{
+        return folder.ID, nil
+    }
 }
