@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/huangyt39/cloud-disk-backend/controller"
+	"github.com/huangyt39/cloud-disk-backend/middleware"
 	"github.com/huangyt39/cloud-disk-backend/utils"
 	"net/http"
 )
@@ -13,6 +14,7 @@ func LoadRouters(router *gin.Engine) {
 
 func loadRouters(router *gin.Engine) {
 	router.Use(utils.Cors())
+	router.Use(middleware.JWT())
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"title": "Main page",
@@ -24,6 +26,7 @@ func loadRouters(router *gin.Engine) {
 	//	})
 	//})
 	router.POST("/login", controller.Login)
+
 	router.GET("/auth", utils.VerifyAuthTokenMiddleWare(), controller.Auth)
 	router.GET("/folders", utils.VerifyAuthTokenMiddleWare(), controller.GetFolders)
 	router.POST("/folders", utils.VerifyAuthTokenMiddleWare(), controller.CreateFolder)
