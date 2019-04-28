@@ -12,6 +12,9 @@ import (
 )
 
 func SharePath(c *gin.Context){
+    cookie, _ := c.Request.Cookie("token")
+    token := cookie.Value
+
     isPublic, isPrivate := false, false
     var files []models.File
     db := database.DB.Where(&models.File{PublicShareUrl:c.Param("path")}).Find(&files)
@@ -40,7 +43,7 @@ func SharePath(c *gin.Context){
     if err := db.Error; err != nil{
         logrus.Errorf("error on find folder_name by folder_id %s", err)
     }
-    realfilename := utils.GenFilename(folder.Name, files[0].Filename)
+    realfilename := utils.GenFilename(folder.Name, files[0].Filename, folder.UserName)
 
     if !((isPublic && files[0].OpenPublicShare) || (isPrivate && files[0].OpenPrivateShare)){
         c.JSON(http.StatusInternalServerError, gin.H{
@@ -57,30 +60,26 @@ func SharePath(c *gin.Context){
             })
             return
         }
-        c.Header("Content-Disposition", `form-data; name="file"; filename=` + files[0].Filename)
-        c.Header("Content-Type", "application/octet-stream")
-        c.File(path.Join(config.SavePath, realfilename))
-        c.JSON(http.StatusOK, gin.H{
-            "message" : "ok",
-        })
-        return
-    }
-
-    token := config.Token
-    if isPrivate{
-        pw := c.Query("password")
-        if pw == "" || pw != files[0].PrivateSharePassword{
-            token = ""
+        if isPublic || c.Query("password") == files[0].PrivateSharePassword{
+            c.Header("Content-Disposition", `form-data; name="file"; filename=` + files[0].Filename)
+            c.Header("Content-Type", "application/octet-stream")
+            c.File(path.Join(config.SavePath, realfilename))
+            c.JSON(http.StatusOK, gin.H{
+                "message": "ok",
+                "data" : gin.H{
+                    "filename" : files[0].Filename,
+                    "folder" : folder.Name,
+                    "open_public_share": files[0].OpenPublicShare,
+                    "open_private_share": files[0].OpenPrivateShare,
+                    "token" : token,
+                },
+            })
+            return
+        }else{
+            c.JSON(http.StatusNotFound, gin.H{
+                "message" : "error",
+            })
+            return
         }
     }
-    c.JSON(http.StatusOK, gin.H{
-        "message": "ok",
-        "data" : gin.H{
-            "filename" : files[0].Filename,
-            "folder" : folder.Name,
-            "open_public_share": files[0].OpenPublicShare,
-            "open_private_share": files[0].OpenPrivateShare,
-            "token": token,
-        },
-    })
 }

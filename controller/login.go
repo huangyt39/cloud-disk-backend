@@ -45,6 +45,8 @@ func Login(c *gin.Context) {
             })
             return
 		} else {
+			database.LoginStatus[token[:20]] = username
+			database.DB.Model(models.User{}).Where("name = ?", username).Update("token", token)
             c.JSON(http.StatusOK, gin.H{
                 "message": "ok",
                 "token" : token,
@@ -71,6 +73,7 @@ func usernameMatchPassword(username, password string) bool {
 	user := &models.User{
 		username,
 		password,
+		"",
 	}
 	db := database.DB.Where(&user).Find(&users)
 	if err := db.Error; err != nil {

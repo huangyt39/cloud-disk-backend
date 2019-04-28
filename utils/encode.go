@@ -23,9 +23,9 @@ func GeneratePassword() string{
     return s
 }
 
-func GenFilename(foldername, filename string) string{
+func GenFilename(foldername, filename string, username string) string{
     h := md5.New()
-    io.WriteString(h, foldername + "_" + filename)
+    io.WriteString(h, foldername + "_" + filename + "_" + username)
     return string(fmt.Sprintf("%x", h.Sum(nil)))
 }
 

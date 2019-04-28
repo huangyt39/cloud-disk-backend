@@ -14,7 +14,6 @@ func LoadRouters(router *gin.Engine) {
 
 func loadRouters(router *gin.Engine) {
 	router.Use(utils.Cors())
-	router.Use(middleware.JWT())
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"title": "Main page",
@@ -26,16 +25,20 @@ func loadRouters(router *gin.Engine) {
 	//	})
 	//})
 	router.POST("/login", controller.Login)
+	router.POST("/register", controller.Register)
 
-	router.GET("/auth", utils.VerifyAuthTokenMiddleWare(), controller.Auth)
-	router.GET("/folders", utils.VerifyAuthTokenMiddleWare(), controller.GetFolders)
-	router.POST("/folders", utils.VerifyAuthTokenMiddleWare(), controller.CreateFolder)
-	router.GET("/folders/:folder_name", utils.VerifyAuthTokenMiddleWare(), controller.GetFolder)
-	router.POST("/folders/:folder_name", utils.VerifyAuthTokenMiddleWare(), controller.UploadFile)
-	router.DELETE("/folders/:folder_name", utils.VerifyAuthTokenMiddleWare(), controller.DeleteFolder)
-	router.GET("/folders/:folder_name/:file_name", utils.VerifyAuthTokenMiddleWare(), controller.DownloadFile)
-	router.DELETE("/folders/:folder_name/:file_name", utils.VerifyAuthTokenMiddleWare(), controller.DeleteFile)
-	router.PATCH("/folders/:folder_name/:file_name", utils.VerifyAuthTokenMiddleWare(), controller.PatchSharetype)
-	router.GET("/share/:path", utils.VerifyAuthTokenMiddleWare(), controller.SharePath)
-	router.GET("/s/:path", utils.VerifyAuthTokenMiddleWare(), controller.SharePath)
+	authorized := router.Group("/")
+	authorized.Use(middleware.JWT())
+	{
+		router.GET("/auth", controller.Auth)
+		router.GET("/folders", controller.GetFolders)
+		router.POST("/folders", controller.CreateFolder)
+		router.GET("/folders/:folder_name",  controller.GetFolder)
+		router.POST("/folders/:folder_name", controller.UploadFile)
+		router.DELETE("/folders/:folder_name",  controller.DeleteFolder)
+		router.GET("/folders/:folder_name/:file_name", controller.DownloadFile)
+		router.DELETE("/folders/:folder_name/:file_name", controller.DeleteFile)
+		router.PATCH("/folders/:folder_name/:file_name", controller.PatchSharetype)
+		router.GET("/share/:path", controller.SharePath)
+	}
 }

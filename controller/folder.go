@@ -12,8 +12,12 @@ import (
 )
 
 func GetFolders(c *gin.Context){
+    cookie, _ := c.Request.Cookie("token")
+    token := cookie.Value
+    currentUser := database.GetCurrentUser(token)
+
     var folders []models.Folder
-    db := database.DB.Find(&folders)
+    db := database.DB.Where("user_name = ?", currentUser).Find(&folders)
     if err := db.Error; err != nil{
         logrus.Errorf("error on select folders, %s", err)
         c.JSON(http.StatusConflict, gin.H{
@@ -34,6 +38,10 @@ func GetFolders(c *gin.Context){
 }
 
 func CreateFolder(c *gin.Context){
+    cookie, _ := c.Request.Cookie("token")
+    token := cookie.Value
+    currentUser := database.GetCurrentUser(token)
+
     var folder map[string]interface{}
     body, _ := ioutil.ReadAll(c.Request.Body)
     json.Unmarshal(body, &folder)
@@ -45,7 +53,7 @@ func CreateFolder(c *gin.Context){
     }
     name := folder["name"].(string)
     if name != ""{
-        err := database.CreateFolder(name)
+        err := database.CreateFolder(name, currentUser)
         if err != nil{
             logrus.Errorf("error on create folder, %s", err)
             c.JSON(http.StatusConflict, gin.H{
@@ -65,15 +73,7 @@ func CreateFolder(c *gin.Context){
 }
 
 func GetFolder(c *gin.Context){
-    //get folder id
-    folderId, err := database.GetFolderIDbyName(c.Param("folder_name"))
-    if err != nil{
-        logrus.Errorf("error on get folderid by name %s", err)
-        c.JSON(http.StatusNotFound, gin.H{
-            "message" : "error",
-        })
-        return
-    }
+    folderId := c.Param("folder_name")
     //get files infomation
     var files []models.File
     db := database.DB.Where("folder_id = ?", folderId).Find(&files)
@@ -100,16 +100,8 @@ func GetFolder(c *gin.Context){
 }
 
 func DeleteFolder(c *gin.Context){
-    //get folder id
-    folderId, err := database.GetFolderIDbyName(c.Param("folder_name"))
-    if err != nil{
-        logrus.Errorf("error on get folderid by name %s", err)
-        c.JSON(http.StatusNotFound, gin.H{
-            "message" : "error",
-        })
-        return
-    }
-    db := database.DB.Delete(&models.Folder{folderId, c.Param("folder_name")})
+    folderId := c.Param("folder_name")
+    db := database.DB.Where("id = ?", folderId).Delete(&models.Folder{})
     if err := db.Error; err != nil{
         logrus.Errorf("error on delete folder, %s", err)
         c.JSON(http.StatusConflict, gin.H{

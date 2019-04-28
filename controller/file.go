@@ -11,10 +11,15 @@ import (
     "net/http"
     "os"
     "path"
+    "strconv"
 )
 
 func DownloadFile(c *gin.Context){
-    realfilename := utils.GenFilename(c.Param("folder_name"), c.Param("file_name"))
+    cookie, _ := c.Request.Cookie("token")
+    token := cookie.Value
+    currentUser := database.GetCurrentUser(token)
+
+    realfilename := utils.GenFilename(c.Param("folder_name"), c.Param("file_name"), currentUser)
     if !utils.PathExist(path.Join(config.SavePath, realfilename)){
         logrus.Errorf("error on find if file exit, file not exit")
         c.JSON(http.StatusNotFound, gin.H{
@@ -33,10 +38,12 @@ func DownloadFile(c *gin.Context){
 }
 
 func UploadFile(c *gin.Context){
-    //get folder_id
+    cookie, _ := c.Request.Cookie("token")
+    token := cookie.Value
+    currentUser := database.GetCurrentUser(token)
     //get folder id
     var folder models.Folder
-    db := database.DB.Where("name = ?", c.Param("folder_name")).Find(&folder)
+    db := database.DB.Where("name = ? AND user_name = ?", c.Param("folder_name"), currentUser).Find(&folder)
     if err := db.Error; err != nil{
         logrus.Errorf("error on select folder, %s", err)
         c.JSON(http.StatusNotFound, gin.H{
@@ -55,7 +62,7 @@ func UploadFile(c *gin.Context){
     }
     filename := header.Filename
     //save file
-    realfilename := utils.GenFilename(folder.Name, filename)
+    realfilename := utils.GenFilename(folder.Name, filename, currentUser)
     if utils.PathExist(path.Join(config.SavePath, realfilename)){
         logrus.Errorf("error on find if file exit")
         c.JSON(http.StatusConflict, gin.H{
@@ -96,7 +103,11 @@ func UploadFile(c *gin.Context){
 }
 
 func DeleteFile(c *gin.Context){
-    realfilename := utils.GenFilename(c.Param("folder_name"), c.Param("file_name"))
+    cookie, _ := c.Request.Cookie("token")
+    token := cookie.Value
+    currentUser := database.GetCurrentUser(token)
+
+    realfilename := utils.GenFilename(c.Param("folder_name"), c.Param("file_name"), currentUser)
     if !utils.PathExist(path.Join(config.SavePath, realfilename)){
         logrus.Errorf("error on find if file exit, file not exit")
         c.JSON(http.StatusNotFound, gin.H{
@@ -105,7 +116,7 @@ func DeleteFile(c *gin.Context){
         return
     }else{
         //get folder id
-        folderId, err := database.GetFolderIDbyName(c.Param("folder_name"))
+        folderId, err := database.GetFolderIDbyName(c.Param("folder_name"), currentUser)
         if err != nil{
             logrus.Errorf("error on get folderid by name %s", err)
             c.JSON(http.StatusNotFound, gin.H{
@@ -136,17 +147,11 @@ func DeleteFile(c *gin.Context){
 func PatchSharetype(c *gin.Context){
     shareType := c.Query("shareType")
     //get folder id
-    folderId, err := database.GetFolderIDbyName(c.Param("folder_name"))
-    if err != nil{
-        logrus.Errorf("error on get folderid by name %s", err)
-        c.JSON(http.StatusNotFound, gin.H{
-            "message" : "error",
-        })
-        return
-    }
+    folderId := c.Param("folder_name")
+    folderIdint, _ := strconv.Atoi(folderId)
     var file models.File
-    db := database.DB.Where(&models.File{Filename: c.Param("file_name"), FolderId:folderId}).First(&file)
-    if db.Error != nil{
+    db := database.DB.Where(&models.File{Filename: c.Param("file_name"), FolderId:folderIdint}).First(&file)
+    if err := db.Error;err != nil{
         logrus.Errorf("error on find file, %s", err)
         c.JSON(http.StatusNotFound, gin.H{
             "message" : "error",

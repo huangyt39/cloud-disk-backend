@@ -17,6 +17,7 @@ func InitMysql(){
         logrus.Errorf("error on initmysql %s", err)
     }
     createIfTableNotExit()
+    getLoginStatusFromDB()
 }
 
 func createIfTableNotExit(){
@@ -40,8 +41,8 @@ func createIfTableNotExit(){
     }
 }
 
-func CreateFolder(name string) error{
-    newFolder := models.Folder{Name:name}
+func CreateFolder(name string, username string) error{
+    newFolder := models.Folder{Name:name, UserName:username}
     err := DB.Create(&newFolder).Error
     if err != nil{
         return err
@@ -66,9 +67,9 @@ func CreateFile(folder_id int, filename string) error{
     return nil
 }
 
-func GetFolderIDbyName(folder_name string) (int , error){
+func GetFolderIDbyName(folder_name string, username string) (int , error){
     var folder models.Folder
-    db := DB.Where("name = ?", folder_name).Find(&folder)
+    db := DB.Where("name = ? AND user_name = ?", folder_name, username).Find(&folder)
     if err := db.Error; err != nil{
         return 0, err
     }else{
